@@ -190,13 +190,23 @@ class CardTablePage(QWidget):
     def add_new_card(self):
         # 获取当前uid指针
         current_uid = self.config.get('card_uid_index', 0)
-        dialog = AddCardDialog(card_mgr=self.main_window.card_mgr, parent=self, base_uid=current_uid)
+        # 获取当前苏丹卡池的总卡数量
+        current_sudan_pool_cards_length = len(self.config.get('sudan_pool_cards', []))
+        dialog = AddCardDialog(card_mgr=self.main_window.card_mgr, parent=self, base_uid=current_uid, base_sudan_pool_cards_length=current_sudan_pool_cards_length)
 
         if dialog.exec() == QDialog.DialogCode.Accepted:
             new_card = dialog.get_new_card_data()
             if new_card:
                 # 添加新卡牌到数据列表
                 self.config['cards'].append(new_card)
+                # 获取新卡牌的type
+                new_card_id = new_card.get('id', -1)
+                new_card_data = self.main_window.card_mgr.get_card_data(new_card_id)
+                new_card_type = new_card_data.get('type', "")
+                # 如果新增卡牌为苏丹卡,在苏丹卡池中添加新苏丹卡的id
+                if new_card_type == "sudan":
+                    self.config['sudan_pool_cards'].append(new_card_id)
+
                 # 刷新表格
                 self.load_data()
                 # uid索引加1
@@ -332,6 +342,13 @@ class CardTablePage(QWidget):
         )
         if reply == QMessageBox.StandardButton.Yes:
             if 0 <= row < len(self.config['cards']):
+                # 判断要删除的卡牌是否是苏丹卡
+                card_id = self.config['cards'][row].get('id', 0)
+                card_data = self.main_window.card_mgr.get_card_data(card_id)
+                card_type = card_data.get('type', "")
+                # 如果新增卡牌为苏丹卡,在苏丹卡池中添加新苏丹卡的id
+                if card_type == "sudan":
+                    self.config['sudan_pool_cards'].pop(self.config['cards'][row].get('tag').get('sudan_pool_index')-1)
                 # 删除数据
                 del self.config['cards'][row]
                 # 调用主界面更新方法

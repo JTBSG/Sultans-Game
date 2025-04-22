@@ -7,12 +7,13 @@ from manager.cardDataManager import CardDataManager
 
 
 class AddCardDialog(QDialog):
-    def __init__(self, card_mgr, parent=None, base_uid=0):
+    def __init__(self, card_mgr, parent=None, base_uid=0, base_sudan_pool_cards_length=0):
         super().__init__(parent)
         self.parent = parent
         self.card_mgr = card_mgr
         self.selected_card = None
         self.base_uid = base_uid
+        self.base_sudan_pool_cards_length = base_sudan_pool_cards_length
         self.new_card_data = {
             'uid': self.base_uid,
             'id': -1,  # 默认未知卡牌
@@ -178,7 +179,12 @@ class AddCardDialog(QDialog):
         # 将选择的卡牌id赋值给新卡牌
         self.id_spin.setValue(card_id)  # 更新显示
         self.new_card_data['id'] = card_id
-
+        # 判断新增卡牌类型，如果是苏丹卡则标签中增加苏丹卡池索引，如果是人物卡标签中增加追随者标签，如果是物品卡用户需自己添加拥有标签
+        if card_data.get('type', '') == "sudan":
+            self.new_card_data['tag'] = f"{{'sudan_pool_index': {self.base_sudan_pool_cards_length+1}}}"
+        elif card_data.get('type', '') == "char":
+            self.new_card_data['tag'] = "{'adherent': 1}"
+        self.tag_edit.setText(self.new_card_data['tag'])  # 更新显示
         # 显示卡牌信息
         info = (
             f"ID: {card_data['id']}\n"
