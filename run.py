@@ -5,6 +5,7 @@ from typing import Any, List, Dict, Optional
 
 from datetime import datetime, timedelta, timezone
 from dateutil import parser  # 需要安装python-dateutil包
+from ijson import items
 
 
 def convert_datetime(iso_str: str) -> datetime:
@@ -424,6 +425,13 @@ class TagDataManager:
 
 # 使用示例
 if __name__ == "__main__":
+
+    file_path = "C:\\Users\\25285\Desktop\新建文件夹 (2)\\auto_save.json"
+    with open(file_path, 'r', encoding='utf-8') as f:
+        configId = next(items(f, 'configId'))
+        name = items(f, 'name')
+
+
     tag_mgr = TagDataManager(
         "E:\\SteamLibrary\\steamapps\\common\\Sultan's Game\\Sultan's Game_Data\\StreamingAssets\\config\\tag.json")
 

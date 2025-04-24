@@ -21,7 +21,7 @@ class InfoPage(QWidget):
 
     def _init_save_file(self):
         # 初始化默认存档路径
-        default_auto_save_file = "C:\\Users\\25285\\Desktop\\新建文件夹 (2)\\auto_save.json"
+        default_auto_save_file = "C:\\Users\\25285\\Desktop\\新建文件夹 (2)\\auto_save111.json"
         # 尝试加载默认存档路径
         try:
             self.load_archive(default_auto_save_file)
@@ -138,7 +138,7 @@ class InfoPage(QWidget):
             # 添加新监视
             self.file_watcher.addPath(path)
         except Exception as e:
-            QMessageBox.critical(self, "加载错误", f"无法加载存档文件: {str(e)}")
+            QMessageBox.warning(self, "加载错误", f"无法加载存档文件: {str(e)}")
 
     # 选择存档文件
     def _select_auto_save_file(self):

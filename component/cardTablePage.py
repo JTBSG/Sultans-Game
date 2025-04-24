@@ -103,9 +103,9 @@ class CardTablePage(QWidget):
         # 加载数据的时候断开信号连接
         self._disconnect_signals()
 
-        self.table.setRowCount(len(self.config.get('cards')))
+        self.table.setRowCount(len(self.config.get('cards', {})))
 
-        for row, card in enumerate(self.config.get('cards')):
+        for row, card in enumerate(self.config.get('cards', {})):
             # 添加查看卡片初始信息按钮
             front_btn = QPushButton("查看详情")
             front_btn.clicked.connect(partial(self.show_detail, row))

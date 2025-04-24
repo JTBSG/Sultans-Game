@@ -17,7 +17,9 @@ from component.addCardDialog import AddCardDialog
 
 from manager.cardDataManager import CardDataManager
 from manager.tagDataManager import TagDataManager
+from manager.riteDataManager import RiteDataManager
 from component.cardTablePage import CardTablePage
+from component.riteTablePage import RiteTablePage
 from component.infoPage import InfoPage
 from component.helpPage import HelpPage
 
@@ -27,10 +29,12 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.config = {}  # 统一管理配置数据
         self.card_mgr = None
+        self.rite_mgr = None
         self.default_data_dir = data_dir
         self.data_dir = data_dir
         self.info_page = InfoPage(self)
         self.table_page = CardTablePage(self)
+        self.rite_page = RiteTablePage(self)
 
 
         self.initUI()
@@ -40,6 +44,7 @@ class MainWindow(QMainWindow):
         self.info_page._init_save_file()
         self.info_page.update_info()
         self.table_page.update_info()
+        self.rite_page.update_info()
 
     # 初始化卡牌和标签管理器
     def _init_managers(self, data_dir: str):
@@ -47,9 +52,11 @@ class MainWindow(QMainWindow):
         try:
             cards_path = os.path.join(data_dir, "cards.json")
             tags_path = os.path.join(data_dir, "tag.json")
+            rites_path = os.path.join(data_dir, "rite")
             try:
                 self.card_mgr = CardDataManager(cards_path)
                 # self.tag_mgr = TagDataManager(tags_path)
+                self.rite_mgr = RiteDataManager(rites_path)
             except Exception as e:
                 QMessageBox.critical(self, "错误", f"加载默认游戏数据失败: {str(e)}")
         finally:
@@ -66,6 +73,7 @@ class MainWindow(QMainWindow):
         # 初始化页面
         self.tabs.addTab(self.info_page, "基本信息")
         self.tabs.addTab(self.table_page, "卡牌编辑")
+        self.tabs.addTab(self.rite_page, "仪式编辑")
         help_page = HelpPage()
         self.tabs.addTab(help_page, "帮助信息")
 
@@ -90,6 +98,7 @@ class MainWindow(QMainWindow):
         self.config = new_config
         self.info_page.update_info()
         self.table_page.update_info()
+        self.rite_page.update_info()
 
     # 在关闭窗口时增加
     def closeEvent(self, event):
