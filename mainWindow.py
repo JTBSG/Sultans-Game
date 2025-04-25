@@ -25,13 +25,14 @@ from component.helpPage import HelpPage
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, data_dir: str):
+    def __init__(self, data_dir: str, save_dir: str):
         super().__init__()
         self.config = {}  # 统一管理配置数据
         self.card_mgr = None
         self.rite_mgr = None
         self.default_data_dir = data_dir
         self.data_dir = data_dir
+        self.save_dir = save_dir
         self.info_page = InfoPage(self)
         self.table_page = CardTablePage(self)
         self.rite_page = RiteTablePage(self)
@@ -114,6 +115,6 @@ if __name__ == "__main__":
         sys.exit(0)
 
     # 启动主窗口
-    main_window = MainWindow(startup_dialog.data_dir)
+    main_window = MainWindow(startup_dialog.data_dir, startup_dialog.save_dir)
     main_window.show()
     sys.exit(app.exec())

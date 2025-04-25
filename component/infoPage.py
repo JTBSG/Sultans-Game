@@ -20,9 +20,7 @@ class InfoPage(QWidget):
 
 
     def _init_save_file(self):
-        # 初始化默认存档路径
-        temp_path = os.path.join(os.path.dirname(os.environ.get('APPDATA')), 'LocalLow')
-        default_auto_save_file = os.path.join(temp_path, 'DoubleCross', 'SultansGame', 'SAVEDATA', '76561199041269113', 'auto_save.json')
+        default_auto_save_file = self.main_window.save_dir
         # 尝试加载默认存档路径
         try:
             self.load_archive(default_auto_save_file)
