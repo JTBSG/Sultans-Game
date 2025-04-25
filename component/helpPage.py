@@ -11,8 +11,8 @@ class HelpPage(QTextEdit):
     def setup_ui(self):
         self.setReadOnly(True)
         self.setHtml("""
-            <h1 style="color: #2c3e50;">苏丹的游戏存档编辑器 v1.0.0</h1>
-
+            <h1 style="color: #2c3e50;">苏丹的游戏存档编辑器 v1.0.2</h1>
+                <p>有任何问题欢迎与我联系，欢迎加群讨论，群内会第一时间更新最新版本，QQ群：271892787</p>
             <h2>使用指南</h2>
             <div style="margin-left: 20px;">
                 <h3>基本功能</h3>
@@ -26,6 +26,11 @@ class HelpPage(QTextEdit):
                             <li>表格直接编辑修改卡牌属性，修改前请确保您知晓卡牌各属性的格式和内容</li>
                             <li>点击查看详情按钮查看卡牌的默认信息</li>
                             <li>点击删除按钮删除对应卡牌</li>
+                        </ul>
+                    </li>
+                    <li>仪式界面功能:
+                        <ul>
+                            <li>查看当前开启的仪式及仪式详细信息</li>
                         </ul>
                     </li>
                 </ol>
@@ -44,7 +49,8 @@ class HelpPage(QTextEdit):
                     <li>bug:目前软件区分是否为手牌的方式是根据其在背包中的位置，(0,0)和(0,1)位置的卡牌是隐藏卡牌，这就导致真正(0,1)位置的卡牌也被划分为了隐藏</li>
                     <li>bug:书籍如果被使用依旧会占用背包位置，导致被筛选为手牌中的卡，需要根据其标签中是否存在{'own': -1}进一步筛选，我这里懒得搞了</li>
                     <li>bug:如果先搜索了卡牌然后新增卡牌，可能导致页面布局改变，点击手动刷新即可恢复页面布局</li>
-                    <li>tip:有任何问题欢迎与我联系</li>     
+                    <li>bug:新增装备类卡牌时需要添加{"own":1}的标签，否则不会出现在手牌中
+                    <li>tip:有任何问题欢迎与我联系，欢迎加群讨论，群内会第一时间更新最新版本，QQ群：271892787</li>     
                 </ul>
             </div>
 
@@ -54,7 +60,8 @@ class HelpPage(QTextEdit):
             <div style="margin-left: 20px;">
                 <p>开发者：JTBSG</p>
                 <p>联系方式：2528575905@qq.com</p>
-                <p>版本号：1.0.0 (2025-04)</p>
+                <p>交流群：271892787</p>
+                <p>版本号：1.0.2 (2025-04)</p>
                 <p>开源协议：MIT License</p>
             </div>
 
@@ -78,8 +85,6 @@ class HelpPage(QTextEdit):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-
-
     # 启动主窗口
     main_window = HelpPage()
     main_window.show()
