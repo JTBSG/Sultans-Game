@@ -172,34 +172,39 @@ class AddCardDialog(QDialog):
 
     # 展示卡牌详细信息
     def show_card_details(self, item):
-        # 解析选择的卡牌ID
-        card_id = int(item.text().split(' - ')[0])
-        card_data = self.card_mgr.get_card_data(card_id)
+        try:
+            # 解析选择的卡牌ID
+            card_id = int(item.text().split(' - ')[0])
+            card_data = self.card_mgr.get_card_data(card_id)
 
-        # 将选择的卡牌id赋值给新卡牌
-        self.id_spin.setValue(card_id)  # 更新显示
-        self.new_card_data['id'] = card_id
-        # 判断新增卡牌类型，如果是苏丹卡则标签中增加苏丹卡池索引，如果是人物卡标签中增加追随者标签，如果是物品卡用户需自己添加拥有标签
-        if card_data.get('type', '') == "sudan":
-            self.new_card_data['tag'] = f"{{'sudan_pool_index': {self.base_sudan_pool_cards_length+1}}}"
-        elif card_data.get('type', '') == "char":
-            self.new_card_data['tag'] = "{'adherent': 1}"
-        self.tag_edit.setText(self.new_card_data['tag'])  # 更新显示
-        # 显示卡牌信息
-        info = (
-            f"ID: {card_data['id']}\n"
-            f"名称: {card_data['name']}\n"
-            f"称号: {card_data['title']}\n"
-            f"类型: {card_data['type']}\n"
-            f"稀有度: {card_data['rare']}星\n"
-            f"是否唯一: {'是' if card_data['is_only'] else '否'}\n"
-            f"默认装备槽: {card_data['equips']}\n"
-            f"默认标签: {card_data['tag']}\n"
-            f"描述: {card_data['text']}"
-        )
+            # 将选择的卡牌id赋值给新卡牌
+            self.id_spin.setValue(card_id)  # 更新显示
+            self.new_card_data['id'] = card_id
+            # 判断新增卡牌类型，如果是苏丹卡则标签中增加苏丹卡池索引，如果是人物卡标签中增加追随者标签，如果是物品卡用户需自己添加拥有标签
+            if card_data.get('type', '') == "sudan":
+                self.new_card_data['tag'] = f"{{'sudan_pool_index': {self.base_sudan_pool_cards_length+1}}}"
+            elif card_data.get('type', '') == "char":
+                self.new_card_data['tag'] = "{'adherent': 1}"
+            else:
+                self.new_card_data['tag'] = "{}"
+            self.tag_edit.setText(self.new_card_data['tag'])  # 更新显示
+            # 显示卡牌信息
+            info = (
+                f"ID: {card_data['id']}\n"
+                f"名称: {card_data['name']}\n"
+                f"称号: {card_data['title']}\n"
+                f"类型: {card_data['type']}\n"
+                f"稀有度: {card_data['rare']}星\n"
+                f"是否唯一: {'是' if card_data['is_only'] else '否'}\n"
+                f"默认装备槽: {card_data['equips']}\n"
+                f"默认标签: {card_data['tag']}\n"
+                f"描述: {card_data['text']}"
+            )
 
-        self.info_text.setPlainText(info)
-        self.selected_card = card_data
+            self.info_text.setPlainText(info)
+            self.selected_card = card_data
+        except Exception as e:
+            print(e)
 
     # 向主界面中传递新生成的卡片信息
     def get_new_card_data(self):

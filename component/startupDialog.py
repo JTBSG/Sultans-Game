@@ -5,9 +5,11 @@ from PyQt6.QtWidgets import (QApplication, QDialog, QVBoxLayout, QLabel,
                              QLineEdit, QPushButton, QFileDialog, QMessageBox, QHBoxLayout)
 from PyQt6.QtCore import Qt, QMimeData
 from PyQt6.QtGui import QDragEnterEvent, QDropEvent
+from pathlib import Path
 
 
 class StartupDialog(QDialog):
+    CONFIG_FILE = "app_config.json"
     DEFAULT_PATHS = [
         r"E:\SteamLibrary\steamapps\common\Sultan's Game\Sultan's Game_Data\StreamingAssets\config",
         r"C:\Program Files (x86)\Steam\steamapps\common\Sultan's Game\Sultan's Game_Data\StreamingAssets\config"
@@ -16,9 +18,18 @@ class StartupDialog(QDialog):
     def __init__(self):
         super().__init__()
         self.data_dir = None
+        self.save_dir = None
+        self.config_path = self.get_config_path()
         self.init_ui()
+        # self.load_condfig
         self.setWindowTitle("配置游戏默认数据")
         self.setAcceptDrops(True)  # 启用拖放功能
+
+    # 获取跨平台的配置文件路径
+    def get_config_path(self):
+        config_dir = Path.home() / ".SultansGame_Save_Editor"
+        config_dir.mkdir(exist_ok=True)
+        return config_dir / self.CONFIG_FILE
 
     def init_ui(self):
         layout = QVBoxLayout()
