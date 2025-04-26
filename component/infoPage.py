@@ -1,16 +1,64 @@
 import json
 import os
 import sys
+from typing import cast
 
-from PyQt6.QtCore import QFileSystemWatcher
+from PyQt6.QtCore import QFileSystemWatcher, Qt
+from PyQt6.QtGui import QIntValidator
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QTextEdit, QApplication, QHBoxLayout, QLineEdit, QPushButton, \
-    QFileDialog, QMessageBox, QGridLayout, QScrollArea
+    QFileDialog, QMessageBox, QGridLayout, QScrollArea, QMainWindow, QCheckBox
 
 
 class InfoPage(QWidget):
+    # 定义可编辑字段及验证规则
+    EDITABLE_FIELDS = {
+        "name": {
+            "type": "text",
+            "display_name": "主角名",
+            "validator": None
+        },
+        "sudan_box_show": {
+            "type": "toggle_button",
+            "display_name": "左上角是否展示女术士的小盒子",
+            "true_text": "已开启",
+            "false_text": "已关闭",
+            "true_color": "#4CAF50",
+            "false_color": "#F44336"
+        },
+        "sudan_card_init_life": {
+            "type": "number",
+            "display_name": "苏丹卡持续回合",
+            "validator": QIntValidator(1, 999)
+        },
+        "sudan_redraw_times_per_round": {
+            "type": "number",
+            "display_name": "重抽次数",
+            "validator": QIntValidator(0, 999)
+        },
+        "sudan_redraw_times": {
+            "type": "number",
+            "display_name": "已用重抽次数",
+            "validator": QIntValidator(0, 999)
+        },
+        "sudan_redraw_times_recovery_round": {
+            "type": "number",
+            "display_name": "重抽次数恢复回合",
+            "validator": QIntValidator(1, 999)
+        },
+        "end_open": {
+            "type": "toggle_button",
+            "display_name": "进入结局，其实就是变成毛毯燃烧效果",
+            "true_text": "已开启",
+            "false_text": "已关闭",
+            "true_color": "#4CAF50",
+            "false_color": "#F44336"
+        }
+    }
+
     def __init__(self, main_window, parent=None):
         super().__init__(parent)
         self.main_window = main_window
+        self.config = self.main_window.config
         self.is_progressing = False  # 状态锁
         self.initUI()
         self.file_watcher = QFileSystemWatcher()  # 增加文件监视器
@@ -66,6 +114,7 @@ class InfoPage(QWidget):
             "name": "主角名",
             "difficulty": "难度等级",
             "round": "回合数",
+            "min_round": "min_round",
             "saveTime": "保存时间",
             "card_uid_index": "卡牌uid索引",
             "rite_uid_index": "仪式uid索引",
@@ -87,16 +136,16 @@ class InfoPage(QWidget):
             "sudan_pool_pos": "sudan_pool_pos",
             "sudan_pool_init_count": "苏丹卡池初始数量",
             "sudan_card_show_times": "sudan_card_show_times",
-            "sudan_remove_count": "sudan_remove_count",
-            "counter": "counter",
+            "sudan_remove_count": "苏丹不上朝次数？",
+            "counter": "计数器",
             "random_cache": "random_cache",
             "only_cards": "only_cards",
             "only_rites": "only_rites",
-            "event_status": "event_status",
+            "event_status": "事件状态",
             "delay_ops": "delay_ops",
             "end_rites": "各仪式完成的次数",
             "gen_cards": "卡牌生成次数",
-            "gen_tags": "gen_tags",
+            "gen_tags": "标签生成次数",
             "timing_rounds": "timing_rounds",
             "auto_result_rites": "auto_result_rites",
             "notes": "notes",
@@ -164,30 +213,132 @@ class InfoPage(QWidget):
             if item.widget():
                 item.widget().deleteLater()
 
-        config = self.main_window.config
-        if not config:
+        self.config = self.main_window.config
+        if not self.config:
             return
 
         row = 0
         for field, display_name in self.field_map.items():
-            value = config.get(field, None)
-
+            value = self.config.get(field, None)
             # 创建标签
             label = QLabel(f"{display_name}:")
             label.setStyleSheet("font-weight: bold;")
-
-            display_value = str(value)
-
-            value_label = QLabel(display_value)
-            value_label.setStyleSheet("border: 1px solid #ddd; padding: 2px;")
-
-            # 添加到布局
-            self.info_layout.addWidget(label, row, 0)
-            self.info_layout.addWidget(value_label, row, 1)
+            # 可编辑字段处理
+            if field in self.EDITABLE_FIELDS:
+                field_def = self.EDITABLE_FIELDS[field]
+                # 处理布尔类型可编辑字段
+                if field_def['type'] == 'toggle_button':
+                    # 创建切换按钮
+                    btn = QPushButton()
+                    btn.setCheckable(True)
+                    btn.setChecked(bool(value))
+                    btn.setObjectName(field)
+                    btn.clicked.connect(self.on_toggle_button_clicked)
+                    # 设置初始样式
+                    self.update_button_style(btn, bool(value))
+                    # 创建布局容器
+                    container = QWidget()
+                    layout = QHBoxLayout(container)
+                    layout.setContentsMargins(0, 0, 0, 0)
+                    # 添加布尔值标签
+                    bool_label = QLabel(str(bool(value)))
+                    bool_label.setObjectName(f"{field}_label")
+                    bool_label.setMinimumWidth(40)
+                    # 将布尔值按钮和标签添加到布局
+                    layout.addWidget(btn)
+                    layout.addWidget(bool_label)
+                    # 将该字段添加到布局
+                    self.info_layout.addWidget(label, row, 0)
+                    self.info_layout.addWidget(container, row, 1)
+                else:
+                    # 创建可编辑输入框
+                    edit = QLineEdit(str(value))
+                    edit.setObjectName(field)  # 设置对象名称用于识别
+                    edit.textChanged.connect(self.on_field_edited)
+                    # 设置验证器
+                    validator = self.EDITABLE_FIELDS[field].get('validator')
+                    if validator:
+                        edit.setValidator(validator)
+                    self.info_layout.addWidget(label, row, 0)
+                    self.info_layout.addWidget(edit, row, 1)
+            else:
+                # 不可编辑字段
+                value_label = QLabel(str(value))
+                value_label.setStyleSheet("border: 1px solid #ddd; padding: 2px;")
+                self.info_layout.addWidget(label, row, 0)
+                self.info_layout.addWidget(value_label, row, 1)
             row += 1
-
         # 添加弹性空间
         self.info_layout.setRowStretch(row, 1)
+
+    # 布尔类型字段按钮点击处理
+    def on_toggle_button_clicked(self):
+        btn = cast(QPushButton, self.sender())
+        field_name = btn.objectName()
+        current_state = btn.isChecked()
+        # 更新配置
+        self.config[field_name] = current_state
+        # 更新按钮样式和标签
+        self.update_button_style(btn, current_state)
+        bool_label = cast(QLabel, btn.parent().findChild(QLabel, f"{field_name}_label"))
+        if bool_label:
+            bool_label.setText(str(current_state))
+
+        print(f"切换状态: {field_name} = {current_state}")
+
+    # 步骤4：添加按钮样式更新方法
+    def update_button_style(self, btn, state):
+        field_def = self.EDITABLE_FIELDS.get(btn.objectName(), {})
+
+        style = f"""
+            QPushButton {{
+                min-width: 80px;
+                max-width: 80px;
+                height: 28px;
+                border: none;
+                border-radius: 14px;
+                color: white;
+                font-weight: bold;
+                padding: 0 8px;
+                background: {field_def['true_color' if state else 'false_color']};
+            }}
+            QPushButton:hover {{
+                opacity: 0.9;
+            }}
+            QPushButton:pressed {{
+                opacity: 0.8;
+            }}
+        """
+
+        btn.setStyleSheet(style)
+        btn.setText(field_def['true_text' if state else 'false_text'])
+
+    # 添加可编辑字段的响应方法
+    def on_field_edited(self, text):
+        sender = self.sender()
+        field_name = sender.objectName()
+
+        # 获取字段定义
+        field_def = self.EDITABLE_FIELDS.get(field_name, {})
+
+        try:
+            # 数据类型转换
+            if field_def.get('type') == 'number':
+                new_value = int(text) if text else 0
+            elif field_def.get('type') == 'bool':
+                new_value = True if text == 'True' else False
+            else:
+                new_value = text
+
+            # 更新配置
+            self.config[field_name] = new_value
+            print(f"字段已更新: {field_name} = {new_value}")
+
+            # 实时更新显示（可选）
+            sender.setStyleSheet("background-color: #e3f2fd;")
+        except ValueError as e:
+            QMessageBox.warning(self, "输入错误", f"无效的数值: {field_def['display_name']}")
+            sender.setStyleSheet("background-color: #ffebee;")
 
     # 当检测到文件变化时的处理
     def on_archive_changed(self, path):
@@ -226,6 +377,8 @@ class InfoPage(QWidget):
 
     # 保存配置到原始文件
     def save_config(self):
+        self.main_window.update_config(self.config)
+
         auto_save_path = self.archive_path_edit.text()
         if not auto_save_path:
             QMessageBox.warning(self, "错误", "请先选择存档文件路径")
@@ -271,3 +424,33 @@ class InfoPage(QWidget):
         msg.setText(content)
         msg.exec()
 
+
+if __name__ == "__main__":
+    # 模拟主窗口类
+    class MockMainWindow(QMainWindow):
+        def __init__(self):
+            super().__init__()
+            self.config = {}
+            self.save_dir = ""
+
+
+        def update_config(self, new_config):
+            self.config = new_config
+            print("配置已更新，字段数:", len(new_config))
+
+    # 初始化应用
+    app = QApplication(sys.argv)
+
+    # 创建模拟主窗口
+    main_window = MockMainWindow()
+    main_window.save_dir = r"C:\Users\25285\Desktop\新建文件夹 (2)\auto_save.json"
+
+    # 创建并显示界面
+    info_page = InfoPage(main_window)
+    info_page.show()
+
+    info_page._init_save_file()
+    info_page.update_info()
+
+    # 运行测试循环
+    sys.exit(app.exec())
