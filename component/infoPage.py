@@ -57,6 +57,15 @@ class InfoPage(QWidget):
 
     def __init__(self, main_window, parent=None):
         super().__init__(parent)
+        # 新增计数器字段定义
+        self.counter_fields = {
+            7100001: "善名",
+            7100002: "恶名",
+            7100003: "权势",
+            7100004: "侠名",
+            7100005: "灵视",
+            7100006: "金骰子数"
+        }
         self.main_window = main_window
         self.config = self.main_window.config
         self.is_progressing = False  # 状态锁
@@ -96,6 +105,24 @@ class InfoPage(QWidget):
         self.refresh_btn.setToolTip("强制重新加载当前存档文件")
         self.refresh_btn.clicked.connect(self.manual_refresh)
         layout.addWidget(self.refresh_btn)
+
+        # 计数器区域
+        counter_group = QWidget()
+        counter_layout = QGridLayout(counter_group)
+        counter_layout.addWidget(QLabel("名声属性"), 0, 0, 1, 2)
+        # 创建计数器输入框并保存引用
+        self.counter_edits = {}
+        for row, (field_id, name) in enumerate(self.counter_fields.items(), start=1):
+            label = QLabel(f"{name}:")
+            edit = QLineEdit()
+            edit.setValidator(QIntValidator(0, 999999))
+            edit.textChanged.connect(self.on_counter_edited)
+            self.counter_edits[field_id] = edit
+            col = (row - 1) % 2  # 分两列排列
+            actual_row = (row - 1) // 2 + 1
+            counter_layout.addWidget(label, actual_row, col * 2)
+            counter_layout.addWidget(edit, actual_row, col * 2 + 1)
+        layout.addWidget(counter_group)
 
         # 基本信息区域
         self.info_container = QWidget()
@@ -161,7 +188,7 @@ class InfoPage(QWidget):
             "armageddon_rite_id": "世界末日的时候剩下的那个仪式"
         }
 
-        layout.insertWidget(2, scroll)  # 插入到路径选择区域下方
+        layout.insertWidget(3, scroll)  # 插入到路径选择区域下方
 
         # 添加保存按钮
         button_layout = QHBoxLayout()
@@ -181,6 +208,16 @@ class InfoPage(QWidget):
 
             with open(path, 'r', encoding='utf-8') as f:
                 new_config = json.load(f)
+
+            # 确保counter字段存在
+            if 'counter' not in new_config:
+                raise Exception
+            else:
+                # 初始化缺失的计数器字段
+                for field_id in self.counter_fields:
+                    if str(field_id) not in new_config['counter']:
+                        new_config['counter'][str(field_id)] = 0
+
             # 调用主界面的更新方法
             self.main_window.update_config(new_config)
             # 添加新监视
@@ -216,6 +253,12 @@ class InfoPage(QWidget):
         self.config = self.main_window.config
         if not self.config:
             return
+
+        # 更新计数器显示
+        if 'counter' in self.config:
+            for field_id, edit in self.counter_edits.items():
+                value = self.config['counter'].get(str(field_id), 0)
+                edit.setText(str(value))
 
         row = 0
         for field, display_name in self.field_map.items():
@@ -270,6 +313,22 @@ class InfoPage(QWidget):
             row += 1
         # 添加弹性空间
         self.info_layout.setRowStretch(row, 1)
+
+    def on_counter_edited(self, text):
+        # 获取被编辑的输入框
+        edit = cast(QLineEdit, self.sender())
+        field_id = next(k for k, v in self.counter_edits.items() if v == edit)
+
+        try:
+            new_value = int(text) if text else 0
+            # 更新配置数据
+            self.config['counter'][str(field_id)] = new_value
+            print(f"计数器更新: {self.counter_fields[field_id]} = {new_value}")
+        except ValueError:
+            QMessageBox.warning(self, "输入错误", "请输入有效整数")
+            # 恢复之前的值
+            prev_value = self.config['counter'].get(str(field_id), 0)
+            edit.setText(str(prev_value))
 
     # 布尔类型字段按钮点击处理
     def on_toggle_button_clicked(self):
