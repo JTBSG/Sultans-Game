@@ -22,6 +22,7 @@ from component.cardTablePage import CardTablePage
 from component.riteTablePage import RiteTablePage
 from component.infoPage import InfoPage
 from component.helpPage import HelpPage
+from component.saveArchivePage import SaveArchivePage
 
 
 class MainWindow(QMainWindow):
@@ -36,6 +37,7 @@ class MainWindow(QMainWindow):
         self.info_page = InfoPage(self)
         self.table_page = CardTablePage(self)
         self.rite_page = RiteTablePage(self)
+        self.save_page = SaveArchivePage(self)
 
 
         self.initUI()
@@ -46,6 +48,7 @@ class MainWindow(QMainWindow):
         self.info_page.update_info()
         self.table_page.update_info()
         self.rite_page.update_info()
+        self.save_page.update_info()
 
     # 初始化卡牌和标签管理器
     def _init_managers(self, data_dir: str):
@@ -75,6 +78,7 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(self.info_page, "基本信息")
         self.tabs.addTab(self.table_page, "卡牌编辑")
         self.tabs.addTab(self.rite_page, "仪式编辑")
+        self.tabs.addTab(self.save_page, "存档管理")
         help_page = HelpPage()
         self.tabs.addTab(help_page, "帮助信息")
 
@@ -100,6 +104,7 @@ class MainWindow(QMainWindow):
         self.info_page.update_info()
         self.table_page.update_info()
         self.rite_page.update_info()
+        self.save_page.update_info()
 
     # 在关闭窗口时增加
     def closeEvent(self, event):
