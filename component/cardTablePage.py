@@ -1,3 +1,4 @@
+import ast
 import os
 
 import json5
@@ -174,6 +175,22 @@ class CardTablePage(QWidget):
 
             # 判断是否为(0,0)或者(0,1)
             invisible = (bag == 0 and bagpos == 0) or (bag == 0 and bagpos == 1)
+
+            if invisible:
+                pass
+            else:
+                # 解析第8列字段
+                item_text = self.table.item(row, 8).text().strip()
+                try:
+                    data_dict = ast.literal_eval(item_text)
+
+                    if not isinstance(data_dict, dict):
+                        raise Exception
+
+                    if data_dict.get('own', None) == -1:
+                        invisible = True
+                except Exception as e:
+                    self.show_message("错误", f"解析错误：{str(e)}")
 
             # 根据模式设置行可见性
             if mode == 'all':
