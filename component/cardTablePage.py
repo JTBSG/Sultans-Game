@@ -13,6 +13,8 @@ from PyQt6.QtCore import Qt, QFileSystemWatcher
 from component.startupDialog import StartupDialog
 from component.cardDetailWindow import CardDetailWindow
 from component.addCardDialog import AddCardDialog
+from component.smartTableItem import SmartTableItem
+from component.compoundSortItem import CompoundSortItem
 
 from manager.cardDataManager import CardDataManager
 from manager.tagDataManager import TagDataManager
@@ -85,8 +87,8 @@ class CardTablePage(QWidget):
             "查看", "删除", "UID", "ID", "名称", "数量", "存在回合", "强化次数", "标签",
             "装备槽", "装备", "背包", "背包位置", "自定义名称", "描述", "查看"
         ])
-
-
+        self.table.setSortingEnabled(True)  # 启用表头点击排序
+        self.table.horizontalHeader().setSortIndicatorShown(True)  # 显示排序指示器
 
         # 将控件加入主布局
         main_layout.addLayout(search_layout)
@@ -118,7 +120,7 @@ class CardTablePage(QWidget):
             self.table.setCellWidget(row, 1, delete_btn)
 
             # 创建不可编辑的UID项和id项
-            uid_item = QTableWidgetItem(str(card.get('uid')))
+            uid_item = SmartTableItem(str(card.get('uid')))
             uid_item.setFlags(uid_item.flags() ^ Qt.ItemFlag.ItemIsEditable)
             id_item = QTableWidgetItem(str(card.get('id')))
             id_item.setFlags(id_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
@@ -127,17 +129,17 @@ class CardTablePage(QWidget):
             card_name = QTableWidgetItem(self.main_window.card_mgr.get_card_data(card.get('id')).get('name'))
             card_name.setFlags(card_name.flags() & ~Qt.ItemFlag.ItemIsEditable)
 
-            self.table.setItem(row, 2, QTableWidgetItem(uid_item))
-            self.table.setItem(row, 3, QTableWidgetItem(id_item))
-            self.table.setItem(row, 4, QTableWidgetItem(card_name))
-            self.table.setItem(row, 5, QTableWidgetItem(str(card.get('count'))))
-            self.table.setItem(row, 6, QTableWidgetItem(str(card.get('life'))))
-            self.table.setItem(row, 7, QTableWidgetItem(str(card.get('rareup'))))
+            self.table.setItem(row, 2, uid_item)
+            self.table.setItem(row, 3, id_item)
+            self.table.setItem(row, 4, card_name)
+            self.table.setItem(row, 5, SmartTableItem(str(card.get('count'))))
+            self.table.setItem(row, 6, SmartTableItem(str(card.get('life'))))
+            self.table.setItem(row, 7, SmartTableItem(str(card.get('rareup'))))
             self.table.setItem(row, 8, QTableWidgetItem(str(card.get('tag'))))
             self.table.setItem(row, 9, QTableWidgetItem(str(card.get('equip_slots'))))
             self.table.setItem(row, 10, QTableWidgetItem(str(card.get('equips'))))
-            self.table.setItem(row, 11, QTableWidgetItem(str(card.get('bag'))))
-            self.table.setItem(row, 12, QTableWidgetItem(str(card.get('bagpos'))))
+            self.table.setItem(row, 11, CompoundSortItem(str(card.get('bag'))))
+            self.table.setItem(row, 12, CompoundSortItem(str(card.get('bagpos'))))
             self.table.setItem(row, 13, QTableWidgetItem(card.get('custom_name')))
             self.table.setItem(row, 14, QTableWidgetItem(card.get('custom_text')))
 
